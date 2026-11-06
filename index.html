@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSI301 - Bank Smart Contract DApp via Infura (Assignment 7)</title>
+    <!-- Web3.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.10.4/dist/web3.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #f97316;
+            --primary-hover: #ea580c;
+            --success: #10b981;
+            --success-hover: #059669;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 1. Header Section */
+        .header {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .student-badge {
+            background: rgba(249, 115, 22, 0.12);
+            border: 1px solid rgba(249, 115, 22, 0.35);
+            border-radius: 10px;
+            padding: 10px 14px;
+            width: 100%;
+        }
+
+        .student-badge h1 {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+            color: #fb923c;
+        }
+
+        .student-info {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 11px 18px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-connect {
+            background-color: var(--primary);
+            width: 100%;
+            margin-top: 6px;
+        }
+        .btn-connect:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-deposit {
+            background-color: var(--success);
+            flex: 1;
+        }
+        .btn-deposit:hover:not(:disabled) {
+            background-color: var(--success-hover);
+        }
+
+        .btn-withdraw {
+            background-color: var(--danger);
+            flex: 1;
+        }
+        .btn-withdraw:hover:not(:disabled) {
+            background-color: var(--danger-hover);
+        }
+
+        .btn-check {
+            background-color: #6366f1;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .btn-check:hover:not(:disabled) {
+            background-color: #4f46e5;
+        }
+
+        .section-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .field-label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        input, select {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        .unit-select {
+            width: 110px;
+            flex-shrink: 0;
+        }
+
+        /* 2. Interaction Section */
+        .balance-box {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(16, 185, 129, 0.1));
+            border: 1px solid rgba(249, 115, 22, 0.3);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .balance-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .balance-value {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #fb923c;
+            word-break: break-all;
+        }
+
+        .balance-sub {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        /* 3. Feedback Section */
+        .status-box {
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            word-break: break-all;
+            line-height: 1.5;
+        }
+
+        .status-box.pending {
+            border-color: var(--warning);
+            color: #fde68a;
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .status-box.success {
+            border-color: var(--success);
+            color: #a7f3d0;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .status-box.error {
+            border-color: var(--danger);
+            color: #fecaca;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .meta-info {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 1. Header Section: Student Identity -->
+    <div class="header">
+        <div class="student-badge">
+            <h1>🛰️ Web3 Bank DApp (Infura HttpProvider)</h1>
+            <div class="student-info">
+                <div><strong>รหัสนักศึกษา:</strong> <span id="studentIdText">66026188</span></div>
+                <div><strong>ชื่อ-สกุล:</strong> <span id="studentNameText">ศิวัฒน์ แก้วหนองสังข์</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Infura & Smart Contract Connection Section -->
+    <div class="section-card">
+        <div class="section-title">1. การเชื่อมต่อ Infura (HttpProvider) & Smart Contract</div>
+
+        <label class="field-label">Infura Sepolia HTTPS Endpoint (INFURA_URL)</label>
+        <div class="input-group">
+            <input type="text" id="infuraUrlInput" value="https://sepolia.infura.io/v3/07a1ba8914704deca89e29fa729d34a5" placeholder="https://sepolia.infura.io/v3/YOUR_INFURA_PROJECT_ID" />
+        </div>
+
+        <label class="field-label">Private Key ของกระเป๋าสำหรับลงนามธุรกรรม (PRIVATE_KEY)</label>
+        <div class="input-group">
+            <input type="password" id="privateKeyInput" placeholder="0x... (Private Key จาก MetaMask)" />
+        </div>
+
+        <label class="field-label">Contract Address (Bank Smart Contract)</label>
+        <div class="input-group">
+            <input type="text" id="contractAddressInput" value="0x76cFd28899e24F1cdc7E308877e623AdB63bd725" placeholder="0x..." />
+        </div>
+
+        <button id="connectBtn" class="btn btn-connect" onclick="connectInfura()">
+            🔗 เชื่อมต่อผ่าน Infura (Connect via Infura)
+        </button>
+
+        <div class="meta-info" id="status">สถานะกระเป๋า: ยังไม่ได้เชื่อมต่อ Infura</div>
+        <div class="meta-info" id="contractStatus">สถานะสัญญา: พร้อมเชื่อมต่อที่ 0x76cFd28899e24F1cdc7E308877e623AdB63bd725</div>
+    </div>
+
+    <!-- 2. Interaction Section: CheckBalance, Deposit, Withdraw -->
+    <div class="balance-box">
+        <div class="balance-label">ยอดเงินคงเหลือในธนาคาร (CheckBlance)</div>
+        <div class="balance-value" id="balanceDisplay">0 Wei</div>
+        <div class="balance-sub" id="balanceEthDisplay">(0 ETH)</div>
+        <button id="checkBalanceBtn" class="btn btn-check" onclick="checkBlance()" disabled>
+            🔍 CheckBlance (ตรวจสอบยอดเงิน)
+        </button>
+    </div>
+
+    <div class="section-card">
+        <div class="section-title">2. ทำธุรกรรม ฝากเงิน (Deposit) / ถอนเงิน (Withdraw)</div>
+        <div class="input-group">
+            <input type="number" id="amountInput" placeholder="ระบุจำนวนเงิน เช่น 100 หรือ 0.01" min="0" step="any" />
+            <select id="unitSelect" class="unit-select">
+                <option value="wei">Wei</option>
+                <option value="ether">ETH</option>
+            </select>
+        </div>
+        <div class="action-row">
+            <button id="depositBtn" class="btn btn-deposit" onclick="deposit()" disabled>
+                📥 Deposit (ฝากเงิน)
+            </button>
+            <button id="withdrawBtn" class="btn btn-withdraw" onclick="withdraw()" disabled>
+                📤 Withdraw (ถอนเงิน)
+            </button>
+        </div>
+    </div>
+
+    <!-- 3. Feedback Section -->
+    <div class="section-title">3. สถานะการทำงาน (Transaction Feedback)</div>
+    <div id="statusBox" class="status-box">
+        พร้อมใช้งาน กรุณาตรวจสอบ INFURA_URL และ PRIVATE_KEY แล้วกดปุ่มเชื่อมต่อผ่าน Infura
+    </div>
+</div>
+
+<script>
+    // =========================================================================
+    // ตั้งค่าเริ่มต้นตามโครงสร้างสไลด์ T10.2 และ T10.4
+    // =========================================================================
+    const STUDENT_ID = "66026188";
+    const STUDENT_NAME = "ศิวัฒน์ แก้วหนองสังข์";
+
+    const INFURA_URL = "https://sepolia.infura.io/v3/07a1ba8914704deca89e29fa729d34a5";
+    const PRIVATE_KEY = ""; // สามารถใส่ Private Key ไว้ที่นี่ หรือกรอกบนหน้าเว็บก็ได้
+    const contractAddress = "0x76cFd28899e24F1cdc7E308877e623AdB63bd725";
+
+    // ABI ของ Smart Contract Bank
+    const abi = [
+        {
+            "anonymous": false,
+            "inputs": [
+                { "indexed": true, "internalType": "address", "name": "owner", "type": "address" },
+                { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" }
+            ],
+            "name": "Deposit",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                { "indexed": true, "internalType": "address", "name": "owner", "type": "address" },
+                { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" }
+            ],
+            "name": "Withdraw",
+            "type": "event"
+        },
+        {
+            "inputs": [],
+            "name": "checkBlance",
+            "outputs": [
+                { "internalType": "uint256", "name": "balance", "type": "uint256" }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "deposit",
+            "outputs": [],
+            "stateMutability": "payable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                { "internalType": "uint256", "name": "amount", "type": "uint256" }
+            ],
+            "name": "withdraw",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        }
+    ];
+
+    let web3 = null;
+    let contract = null;
+    let account = null;
+
+    window.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("studentIdText").textContent = STUDENT_ID;
+        document.getElementById("studentNameText").textContent = STUDENT_NAME;
+
+        if (INFURA_URL && !INFURA_URL.includes("YOUR_INFURA_PROJECT_ID")) {
+            document.getElementById("infuraUrlInput").value = INFURA_URL;
+        }
+        if (PRIVATE_KEY && !PRIVATE_KEY.includes("YOUR_PRIVATE_KEY")) {
+            document.getElementById("privateKeyInput").value = PRIVATE_KEY;
+        }
+        if (contractAddress) {
+            document.getElementById("contractAddressInput").value = contractAddress;
+        }
+
+        // หากตั้งค่าทั้ง INFURA_URL และ PRIVATE_KEY ในโค้ดไว้ครบแล้ว ให้เชื่อมต่ออัตโนมัติทันที
+        if (
+            INFURA_URL && !INFURA_URL.includes("YOUR_INFURA_PROJECT_ID") &&
+            PRIVATE_KEY && !PRIVATE_KEY.includes("YOUR_PRIVATE_KEY")
+        ) {
+            connectInfura();
+        }
+    });
+
+    function setStatus(message, type = "") {
+        const box = document.getElementById("statusBox");
+        box.textContent = message;
+        box.className = "status-box " + type;
+    }
+
+    function setButtonsEnabled(enabled) {
+        document.getElementById("checkBalanceBtn").disabled = !enabled;
+        document.getElementById("depositBtn").disabled = !enabled;
+        document.getElementById("withdrawBtn").disabled = !enabled;
+    }
+
+    // =========================================================================
+    // กระบวนการ 4 ขั้นตอนผ่าน Web3.js & Infura (ตามสไลด์ T10.2 / T10.4)
+    // =========================================================================
+    async function connectInfura() {
+        const infuraUrlVal = document.getElementById("infuraUrlInput").value.trim() || INFURA_URL;
+        let privateKeyVal = document.getElementById("privateKeyInput").value.trim() || PRIVATE_KEY;
+        const targetContractAddr = document.getElementById("contractAddressInput").value.trim() || contractAddress;
+
+        if (!infuraUrlVal || infuraUrlVal.includes("YOUR_INFURA_PROJECT_ID")) {
+            setStatus("❌ กรุณาระบุ INFURA_URL (เช่น https://sepolia.infura.io/v3/...)", "error");
+            return;
+        }
+
+        if (!privateKeyVal || privateKeyVal.includes("YOUR_PRIVATE_KEY")) {
+            setStatus("❌ กรุณาระบุ PRIVATE_KEY ของกระเป๋าที่ใช้ทำธุรกรรม", "error");
+            return;
+        }
+
+        // เติม 0x ด้านหน้า Private Key อัตโนมัติหากผู้ใช้คัดลอกมาจาก MetaMask แบบไม่มี 0x
+        if (!privateKeyVal.startsWith("0x")) {
+            privateKeyVal = "0x" + privateKeyVal;
+        }
+
+        try {
+            setStatus("⏳ กำลังเชื่อมต่อเข้าสู่เครือข่ายผ่าน HttpProvider ของ Infura...", "pending");
+
+            // 1. สร้างสะพานเชื่อมโยงด้วย HttpProvider ของ Infura
+            web3 = new Web3(new Web3.providers.HttpProvider(infuraUrlVal));
+
+            // 2. ประกอบร่าง Smart Contract Instance
+            contract = new web3.eth.Contract(abi, targetContractAddr);
+
+            // 3. แปลง Private Key เป็น Account และเพิ่มเข้า Wallet สำหรับลงนามธุรกรรมอัตโนมัติ
+            account = web3.eth.accounts.privateKeyToAccount(privateKeyVal);
+            web3.eth.accounts.wallet.add(account);
+
+            // 4. สะท้อนสถานะการเชื่อมต่อสู่ผู้ใช้งาน (ตามสไลด์หน้า 8)
+            document.getElementById("status").textContent =
+                `Connected via Infura with account: ${account.address}`;
+            document.getElementById("contractStatus").textContent =
+                `สถานะสัญญา: เชื่อมต่อที่ ${targetContractAddr}`;
+            document.getElementById("connectBtn").textContent = "✅ เชื่อมต่อผ่าน Infura แล้ว";
+
+            setButtonsEnabled(true);
+            setStatus(`✅ Connected via Infura with account: ${account.address}`, "success");
+
+            await checkBlance();
+        } catch (err) {
+            setStatus(`❌ การเชื่อมต่อ Infura ล้มเหลว: ${err.message}`, "error");
+        }
+    }
+
+    function getAmountInWei() {
+        const rawAmount = document.getElementById("amountInput").value.trim();
+        const unit = document.getElementById("unitSelect").value;
+
+        if (!rawAmount || Number(rawAmount) <= 0) {
+            throw new Error("กรุณาระบุจำนวนเงินที่มากกว่า 0");
+        }
+
+        if (unit === "ether") {
+            return web3.utils.toWei(rawAmount, "ether");
+        } else {
+            if (!/^\d+$/.test(rawAmount)) {
+                throw new Error("หน่วย Wei ต้องเป็นจำนวนเต็มบวกเท่านั้น");
+            }
+            return rawAmount;
+        }
+    }
+
+    // Read Data (methods.call) - ไม่เสียค่าแก๊ส
+    async function checkBlance() {
+        if (!contract || !account) return;
+
+        try {
+            setStatus("⏳ กำลังดึงข้อมูลยอดเงินจากบล็อกเชนผ่าน Infura (methods.call)...", "pending");
+            const balanceWei = await contract.methods.checkBlance().call({ from: account.address });
+            const balanceEth = web3.utils.fromWei(balanceWei.toString(), "ether");
+
+            document.getElementById("balanceDisplay").textContent = `${balanceWei} Wei`;
+            document.getElementById("balanceEthDisplay").textContent = `(${balanceEth} ETH)`;
+            setStatus(`✅ อัปเดตยอดเงินสำเร็จ: ${balanceWei} Wei (${balanceEth} ETH)`, "success");
+        } catch (err) {
+            setStatus(`❌ ตรวจสอบยอดเงินไม่สำเร็จ: ${err.message}`, "error");
+        }
+    }
+
+    // Write Data (methods.send) - Deposit
+    async function deposit() {
+        if (!contract || !account) return;
+
+        try {
+            const amountWei = getAmountInWei();
+            setStatus(`⏳ กำลังลงนามด้วย Private Key และส่งธุรกรรมฝากเงิน (${amountWei} Wei) ผ่าน Infura...`, "pending");
+
+            const gasLimit = await contract.methods.deposit().estimateGas({
+                from: account.address,
+                value: amountWei
+            }).catch(() => 100000);
+
+            const tx = await contract.methods.deposit().send({
+                from: account.address,
+                value: amountWei,
+                gas: gasLimit
+            });
+
+            setStatus(`✅ ฝากเงินผ่าน Infura สำเร็จ! Transaction Hash: ${tx.transactionHash}`, "success");
+            document.getElementById("amountInput").value = "";
+            await checkBlance();
+        } catch (err) {
+            setStatus(`❌ ฝากเงินไม่สำเร็จ: ${err.message}`, "error");
+        }
+    }
+
+    // Write Data (methods.send) - Withdraw
+    async function withdraw() {
+        if (!contract || !account) return;
+
+        try {
+            const amountWei = getAmountInWei();
+            setStatus(`⏳ กำลังลงนามด้วย Private Key และส่งธุรกรรมถอนเงิน (${amountWei} Wei) ผ่าน Infura...`, "pending");
+
+            const gasLimit = await contract.methods.withdraw(amountWei).estimateGas({
+                from: account.address
+            }).catch(() => 100000);
+
+            const tx = await contract.methods.withdraw(amountWei).send({
+                from: account.address,
+                gas: gasLimit
+            });
+
+            setStatus(`✅ ถอนเงินผ่าน Infura สำเร็จ! Transaction Hash: ${tx.transactionHash}`, "success");
+            document.getElementById("amountInput").value = "";
+            await checkBlance();
+        } catch (err) {
+            setStatus(`❌ ถอนเงินไม่สำเร็จ: ${err.message}`, "error");
+        }
+    }
+</script>
+
+</body>
+</html>
